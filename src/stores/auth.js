@@ -13,9 +13,16 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const response = await authService.login(credentials)
-      user.value = response.user
-      token.value = response.token
-      localStorage.setItem('token', response.token)
+      
+      // Ajustar conforme a estrutura de resposta da API Java
+      user.value = response.usuario || response.user
+      token.value = response.token || response.accessToken
+      
+      localStorage.setItem('token', token.value)
+      if (credentials.remember) {
+        localStorage.setItem('user', JSON.stringify(user.value))
+      }
+      
       return response
     } catch (error) {
       throw error
@@ -24,10 +31,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
-    user.value = null
-    token.value = null
-    localStorage.removeItem('token')
+  const logout = async () => {
+    try {
+      await authService.logout()
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+    } finally {
+      user.value = null
+      token.value = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    }
   }
 
   const checkAuth = async () => {
@@ -35,11 +49,24 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authService.validateToken()
-      user.value = response.user
+      user.value = response.usuario || response.user
       return true
     } catch (error) {
       logout()
       return false
+    }
+  }
+
+  // Inicializar usuário do localStorage se existir
+  const initializeAuth = () => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser && token.value) {
+      try {
+        user.value = JSON.parse(savedUser)
+      } catch (error) {
+        console.error('Erro ao carregar usuário salvo:', error)
+        localStorage.removeItem('user')
+      }
     }
   }
 
@@ -50,6 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    initializeAuth
   }
 })

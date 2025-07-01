@@ -9,16 +9,15 @@
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="email">E-mail</label>
+          <label for="login">Login</label>
           <InputText
-            id="email"
-            v-model="form.email"
-            type="email"
-            placeholder="Digite seu e-mail"
-            :class="{ 'p-invalid': errors.email }"
+            id="login"
+            v-model="form.login"
+            placeholder="Digite seu login"
+            :class="{ 'p-invalid': errors.login }"
             required
           />
-          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+          <small v-if="errors.login" class="p-error">{{ errors.login }}</small>
         </div>
 
         <div class="form-group">
@@ -77,7 +76,7 @@ const toast = useToast()
 const authStore = useAuthStore()
 
 const form = ref({
-  email: '',
+  login: '',
   password: '',
   remember: false
 })
@@ -85,22 +84,20 @@ const form = ref({
 const errors = ref({})
 
 const isFormValid = computed(() => {
-  return form.value.email && form.value.password
+  return form.value.login && form.value.password
 })
 
 const validateForm = () => {
   errors.value = {}
   
-  if (!form.value.email) {
-    errors.value.email = 'E-mail é obrigatório'
-  } else if (!/\S+@\S+\.\S+/.test(form.value.email)) {
-    errors.value.email = 'E-mail inválido'
+  if (!form.value.login) {
+    errors.value.login = 'Login é obrigatório'
   }
   
   if (!form.value.password) {
     errors.value.password = 'Senha é obrigatória'
-  } else if (form.value.password.length < 6) {
-    errors.value.password = 'Senha deve ter pelo menos 6 caracteres'
+  } else if (form.value.password.length < 3) {
+    errors.value.password = 'Senha deve ter pelo menos 3 caracteres'
   }
   
   return Object.keys(errors.value).length === 0
@@ -111,7 +108,7 @@ const handleLogin = async () => {
   
   try {
     await authStore.login({
-      email: form.value.email,
+      login: form.value.login,
       password: form.value.password,
       remember: form.value.remember
     })
@@ -128,7 +125,7 @@ const handleLogin = async () => {
     toast.add({
       severity: 'error',
       summary: 'Erro',
-      detail: error.response?.data?.message || 'Erro ao fazer login',
+      detail: error.response?.data?.message || 'Login ou senha inválidos',
       life: 5000
     })
   }
